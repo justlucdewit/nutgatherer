@@ -1,4 +1,4 @@
-let timewarp = 10;
+let timewarp = 20;
 
 class Field{
     constructor(x, y, w, h){
@@ -22,11 +22,13 @@ class Nutbot{
         this.x = x;
         this.y = y;
         this.r = r;
-        this.slowSpeed = 0.2;
+        this.slowSpeed = 0.4;
         this.fastSpeed = 0.5;
         this.speed = this.slowSpeed*timewarp;
-        this.direction = [this.speed, 0]//x, y
+        this.direction = [1, 0]//x, y
         this.field;
+        this.inSequence = false;
+        this.wantedY = 0
     }
 
     init(field){
@@ -35,34 +37,66 @@ class Nutbot{
 
     show(){
         push();
+        fill(255)
         circle(this.x, this.y, this.r);
         pop();
     }
 
     think(){
-        if(this.x < this.field.x || this.x > this.field.x+this.field.w){
-            this.direction[0]*=-1;
+        if (this.inSequence){
+            if(this.x < this.field.x || this.x > this.field.x+this.field.w){
+                this.direction[0]*=-1;
+                this.wantedY += 10;
+            }
+
+            if (this.y-field.y < this.wantedY){
+                this.y += this.speed;
+            }
+        }else{
+            if (Math.abs(this.x-this.field.x) > 1){
+                this.x -= Math.sign(this.x-this.field.x);
+            }
+            if (Math.abs(this.y-this.field.y) > 1){
+                this.y -= Math.sign(this.y-this.field.y);
+            }
+            if (Math.abs(this.x-this.field.x) < 2 && Math.abs(this.y-this.field.y) < 2){
+                this.inSequence = true
+            }
         }
     }
 
     move(){
-        this.x += this.direction[0];
-        this.y += this.direction[1];
+        if (this.inSequence){
+            this.x += this.direction[0]*this.speed;
+            this.y += this.direction[1]*this.speed;
+        }
     }
 }
 
 field = new Field(100, 100, 500, 500);
-nutbot = new Nutbot(250, 250, 10);
+let nutbot;
 function setup(){
     createCanvas(700, 700);
-    background(255, 0, 0);
+    drawbg()
+    nutbot = new Nutbot(Math.floor(random(700)), Math.floor(random(700)), 20);
     nutbot.init(field);
 }
 
 function draw(){
-    background(255, 0, 0);
-    field.show();
+    background(0)
+    drawbg()
     nutbot.show();
     nutbot.think();
     nutbot.move();
+}
+
+let forestGround;
+function preload(){
+    forestGround = loadImage("images/forest.png");
+}
+
+function drawbg(){
+    //image(forestGround, field.x, field.y, field.w, field.h)
+    fill(0, 255, 0);
+    rect(field.x, field.y, field.w, field.h)
 }
